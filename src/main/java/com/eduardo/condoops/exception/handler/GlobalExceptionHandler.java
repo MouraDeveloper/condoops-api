@@ -1,6 +1,7 @@
 package com.eduardo.condoops.exception.handler;
 
 import com.eduardo.condoops.dto.error.StandardError;
+import com.eduardo.condoops.exception.conflict.ResourceConflictException;
 import com.eduardo.condoops.exception.notfound.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,15 @@ public class GlobalExceptionHandler {
     ) {
         StandardError standardError = buildStandardError(ex, request, HttpStatus.NOT_FOUND);
 
+        return ResponseEntity.status(standardError.status()).body(standardError);
+    }
+
+    @ExceptionHandler(ResourceConflictException.class)
+    public ResponseEntity<StandardError> handleResourceConflictException(
+            ResourceConflictException ex,
+            HttpServletRequest request
+    ) {
+        StandardError standardError = buildStandardError(ex, request, HttpStatus.CONFLICT);
         return ResponseEntity.status(standardError.status()).body(standardError);
     }
 
