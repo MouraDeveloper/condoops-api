@@ -27,11 +27,12 @@ public final class UserMapper {
 
     public static User toEntity(
             CreateUserRequest request,
+            String email,
             Condominium condominium
     ) {
         return User.builder()
                 .name(request.name())
-                .email(request.email())
+                .email(email)
                 .role(request.role())
                 .condominium(condominium)
                 .build();

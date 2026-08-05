@@ -16,4 +16,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
             Long condominiumId,
             Pageable pageable
     );
+
+    Page<User> findByActive(Boolean active, Pageable pageable);
 }
