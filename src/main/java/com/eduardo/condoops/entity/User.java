@@ -45,20 +45,19 @@ public class User {
 
 
     @Builder
-    public User(String name, String email, Role role, Condominium condominium) {
+    public User(String name, Role role, String email, Condominium condominium) {
         this.name = name;
         this.email = email;
-        this.role = role;
         this.condominium = condominium;
+        this.role = role;
     }
 
 
     public void updateData(
-            String name, String email, Role role
+            String name, String email
     ) {
         this.name = name;
         this.email = email;
-        this.role = role;
     }
 
     public void activate() {
@@ -67,6 +66,10 @@ public class User {
 
     public void deactivate() {
         this.active = false;
+    }
+
+    public void changeRole(Role role) {
+        this.role = role;
     }
 
     @PrePersist
