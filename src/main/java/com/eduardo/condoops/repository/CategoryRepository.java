@@ -8,11 +8,26 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.UUID;
 
 public interface CategoryRepository extends JpaRepository<Category, UUID> {
-    boolean existsByCondominiumIdAndName(Long id, String name);
 
-    boolean existsByNameAndCondominiumIdAndIdNot(String name, Long condominiumId, UUID id);
+    boolean existsByCondominiumIdAndNameIgnoreCase(
+            Long condominiumId,
+            String name
+    );
 
-    Page<Category> findAllByActive(boolean active, Pageable pageable);
+    boolean existsByCondominiumIdAndNameIgnoreCaseAndIdNot(
+            Long condominiumId,
+            String name,
+            UUID id
+    );
 
-    Page<Category> findByCondominiumIdAndActive(Long condominiumId, boolean active, Pageable pageable);
+    Page<Category> findAllByActive(
+            boolean active,
+            Pageable pageable
+    );
+
+    Page<Category> findByCondominiumIdAndActive(
+            Long condominiumId,
+            boolean active,
+            Pageable pageable
+    );
 }

@@ -10,9 +10,9 @@ public final class CategoryMapper {
     private CategoryMapper() {
     }
 
-    public static Category toEntity(CreateCategoryRequest request, Condominium condominium) {
+    public static Category toEntity(CreateCategoryRequest request, String name, Condominium condominium) {
         return new Category(
-                request.name(),
+                name,
                 request.description(),
                 condominium
         );
