@@ -7,10 +7,7 @@ import com.eduardo.condoops.dto.asset.UpdateAssetStatusRequest;
 import com.eduardo.condoops.entity.Asset;
 import com.eduardo.condoops.entity.Condominium;
 import com.eduardo.condoops.entity.enums.AssetStatus;
-import com.eduardo.condoops.exception.conflict.AssetAlreadyDeactivatedException;
-import com.eduardo.condoops.exception.conflict.AssetCodeAlreadyExistsException;
-import com.eduardo.condoops.exception.conflict.InactiveAssetOperationNotAllowedException;
-import com.eduardo.condoops.exception.conflict.InactiveCondominiumOperationNotAllowedException;
+import com.eduardo.condoops.exception.conflict.*;
 import com.eduardo.condoops.exception.notfound.AssetNotFoundException;
 import com.eduardo.condoops.exception.notfound.CondominiumNotFoundException;
 import com.eduardo.condoops.mapper.AssetMapper;
@@ -195,6 +192,27 @@ public class AssetService {
         }
 
         asset.deactivate();
+        assetRepository.flush();
+
+        return AssetMapper.toResponse(asset);
+    }
+
+    @Transactional
+    public AssetResponse activateAsset(UUID id) {
+        Asset asset = assetRepository.findById(id)
+                .orElseThrow(
+                        () -> new AssetNotFoundException(id)
+                );
+
+        if (!asset.getCondominium().isActive()) {
+            throw new InactiveCondominiumOperationNotAllowedException(asset.getCondominium().getId());
+        }
+
+        if (asset.isActive()) {
+            throw new AssetAlreadyActivatedException(id);
+        }
+
+        asset.activate();
         assetRepository.flush();
 
         return AssetMapper.toResponse(asset);
