@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -52,7 +53,7 @@ public class UserService {
     @Transactional
     public UserResponse createUser(CreateUserRequest request) {
 
-        String email = request.email().toLowerCase().strip();
+        String email = request.email().toLowerCase(Locale.ROOT).strip();
 
         if (userRepository.existsByEmail(email)) {
             throw new UserEmailAlreadyExistsException(email);
@@ -91,7 +92,7 @@ public class UserService {
             throw new InactiveCondominiumOperationNotAllowedException(user.getCondominium().getId());
         }
 
-        String email = updateUserRequest.email().toLowerCase().strip();
+        String email = updateUserRequest.email().toLowerCase(Locale.ROOT).strip();
 
         if (userRepository.existsByEmailAndIdNot(email, id)) {
             throw new UserEmailAlreadyExistsException(email);
