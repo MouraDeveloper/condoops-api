@@ -14,7 +14,8 @@ public final class CategoryMapper {
         return new Category(
                 name,
                 request.description(),
-                condominium
+                condominium,
+                request.defaultResponseHours()
         );
     }
 
@@ -23,6 +24,7 @@ public final class CategoryMapper {
                 category.getId(),
                 category.getName(),
                 category.getDescription(),
+                category.getDefaultResponseHours(),
                 category.isActive(),
                 category.getCondominium().getId(),
                 category.getCreatedAt(),

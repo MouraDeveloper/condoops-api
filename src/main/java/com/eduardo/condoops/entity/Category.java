@@ -24,6 +24,9 @@ public class Category {
     @Column(length = 255)
     private String description;
 
+    @Column(nullable = false, name = "default_response_hours")
+    private int defaultResponseHours;
+
     @Column(nullable = false)
     private boolean active = true;
 
@@ -41,11 +44,13 @@ public class Category {
     public Category(
             String name,
             String description,
-            Condominium condominium
+            Condominium condominium,
+            int defaultResponseHours
     ) {
         this.name = name;
         this.description = description;
         this.condominium = condominium;
+        this.defaultResponseHours = defaultResponseHours;
     }
 
 
@@ -59,10 +64,12 @@ public class Category {
 
     public void update(
             String name,
-            String description
+            String description,
+            int defaultResponseHours
     ) {
         this.name = name;
         this.description = description;
+        this.defaultResponseHours = defaultResponseHours;
     }
 
     @PrePersist

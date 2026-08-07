@@ -44,8 +44,7 @@ public class CategoryService {
         if (categoryRepository.existsByCondominiumIdAndNameIgnoreCase(category.condominiumId(), name)) {
             throw new CategoryNameAlreadyExistsException(
                     name,
-                    category
-                            .condominiumId());
+                    category.condominiumId());
         }
 
         Category category1 = CategoryMapper.toEntity(category, name, condominium);
@@ -131,7 +130,8 @@ public class CategoryService {
 
         category.update(
                 name,
-                categoryRequest.description()
+                categoryRequest.description(),
+                categoryRequest.defaultResponseHours()
         );
 
         categoryRepository.flush();

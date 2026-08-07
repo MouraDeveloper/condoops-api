@@ -7,6 +7,7 @@ public record CategoryResponse(
         UUID id,
         String name,
         String description,
+        int defaultResponseHours,
         boolean active,
         Long condominiumId,
         Instant createdAt,
