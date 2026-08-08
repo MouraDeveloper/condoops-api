@@ -1,6 +1,6 @@
 package com.eduardo.condoops.mapper;
 
-import com.eduardo.condoops.dto.maintenanceRequest.CreateMaintenanceRequestRequest;
+import com.eduardo.condoops.dto.maintenanceRequest.CreateMaintenanceRequestDto;
 import com.eduardo.condoops.dto.maintenanceRequest.MaintenanceRequestResponse;
 import com.eduardo.condoops.entity.Asset;
 import com.eduardo.condoops.entity.Category;
@@ -35,7 +35,7 @@ public final class MaintenanceRequestMapper {
     }
 
     public static MaintenanceRequest toEntity(
-            CreateMaintenanceRequestRequest request,
+            CreateMaintenanceRequestDto request,
             Asset asset,
             Category category,
             User requester,

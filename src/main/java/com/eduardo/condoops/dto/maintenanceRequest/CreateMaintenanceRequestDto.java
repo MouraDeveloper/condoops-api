@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.UUID;
 
-public record CreateMaintenanceRequestRequest(
+public record CreateMaintenanceRequestDto(
         @NotBlank(message = "Title is required")
         @Size(
                 min = 5,
