@@ -141,7 +141,10 @@ public class MaintenanceRequestService {
     }
 
     @Transactional
-    public MaintenanceRequestResponse sendToReview(UUID requestId, Long condominiumId) {
+    public MaintenanceRequestResponse sendToReview(
+            UUID requestId,
+            Long condominiumId
+    ) {
         MaintenanceRequest request = findEntityByIdAndCondominiumId(requestId, condominiumId);
 
         if (!request.getStatus().equals(MaintenanceRequestStatus.OPEN)) {
@@ -257,7 +260,10 @@ public class MaintenanceRequestService {
         );
     }
 
-    private MaintenanceRequest findEntityByIdAndCondominiumId(UUID requestId, Long condominiumId) {
+    private MaintenanceRequest findEntityByIdAndCondominiumId(
+            UUID requestId,
+            Long condominiumId
+    ) {
         MaintenanceRequest request = maintenanceRequestRepository.findById(requestId)
                 .orElseThrow(() -> new MaintenanceRequestNotFound(requestId));
 
