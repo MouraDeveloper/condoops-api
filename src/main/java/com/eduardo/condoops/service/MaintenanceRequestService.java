@@ -38,32 +38,38 @@ public class MaintenanceRequestService {
             CreateMaintenanceRequestDto requestDto,
             Long condominiumId
     ) {
+        MaintenanceRequest maintenanceRequest =
+                buildMaintenanceRequest(requestDto, condominiumId);
 
-        MaintenanceRequest maintenanceRequest = buildMaintenanceRequest(requestDto, condominiumId);
-
-        MaintenanceRequest saved = maintenanceRequestRepository.save(maintenanceRequest);
+        MaintenanceRequest saved =
+                maintenanceRequestRepository.save(maintenanceRequest);
 
         return MaintenanceRequestMapper.toResponse(saved);
     }
+
 
     @Transactional(readOnly = true)
     public MaintenanceRequestResponse findByIdAndCondominiumId(
             UUID requestId,
             Long condominiumId
     ) {
-        MaintenanceRequest request = findEntityByIdAndCondominiumId(requestId, condominiumId);
+        MaintenanceRequest request =
+                findEntityByIdAndCondominiumId(requestId, condominiumId);
 
         return MaintenanceRequestMapper.toResponse(request);
     }
+
 
     @Transactional(readOnly = true)
     public Page<MaintenanceRequestResponse> findAllByCondominiumId(
             Long condominiumId,
             Pageable pageable
     ) {
-        return maintenanceRequestRepository.findByCondominiumId(condominiumId, pageable)
+        return maintenanceRequestRepository
+                .findByCondominiumId(condominiumId, pageable)
                 .map(MaintenanceRequestMapper::toResponse);
     }
+
 
     @Transactional(readOnly = true)
     public Page<MaintenanceRequestResponse> findByCondominiumIdAndStatus(
@@ -71,9 +77,11 @@ public class MaintenanceRequestService {
             MaintenanceRequestStatus status,
             Pageable pageable
     ) {
-        return maintenanceRequestRepository.findByCondominiumIdAndStatus(condominiumId, status, pageable)
+        return maintenanceRequestRepository
+                .findByCondominiumIdAndStatus(condominiumId, status, pageable)
                 .map(MaintenanceRequestMapper::toResponse);
     }
+
 
     @Transactional(readOnly = true)
     public Page<MaintenanceRequestResponse> findByCondominiumIdAndPriority(
@@ -81,7 +89,8 @@ public class MaintenanceRequestService {
             Priority priority,
             Pageable pageable
     ) {
-        return maintenanceRequestRepository.findByCondominiumIdAndPriority(condominiumId, priority, pageable)
+        return maintenanceRequestRepository
+                .findByCondominiumIdAndPriority(condominiumId, priority, pageable)
                 .map(MaintenanceRequestMapper::toResponse);
     }
 
@@ -92,9 +101,11 @@ public class MaintenanceRequestService {
             UUID assetId,
             Pageable pageable
     ) {
-        return maintenanceRequestRepository.findByCondominiumIdAndAssetId(condominiumId, assetId, pageable)
+        return maintenanceRequestRepository
+                .findByCondominiumIdAndAssetId(condominiumId, assetId, pageable)
                 .map(MaintenanceRequestMapper::toResponse);
     }
+
 
     @Transactional(readOnly = true)
     public Page<MaintenanceRequestResponse> findByCondominiumIdAndCategoryId(
@@ -102,20 +113,29 @@ public class MaintenanceRequestService {
             UUID categoryId,
             Pageable pageable
     ) {
-        return maintenanceRequestRepository.findByCondominiumIdAndCategoryId(condominiumId, categoryId, pageable)
+        return maintenanceRequestRepository
+                .findByCondominiumIdAndCategoryId(condominiumId, categoryId, pageable)
                 .map(MaintenanceRequestMapper::toResponse);
     }
+
 
     @Transactional(readOnly = true)
     public Page<MaintenanceRequestResponse> findByCondominiumIdAndOpenedAtBetween(
             Long condominiumId,
-            Instant openedAt,
             Instant start,
+            Instant end,
             Pageable pageable
     ) {
-        return maintenanceRequestRepository.findByCondominiumIdAndOpenedAtBetween(condominiumId, openedAt, start, pageable)
+        return maintenanceRequestRepository
+                .findByCondominiumIdAndOpenedAtBetween(
+                        condominiumId,
+                        start,
+                        end,
+                        pageable
+                )
                 .map(MaintenanceRequestMapper::toResponse);
     }
+
 
     @Transactional(readOnly = true)
     public Page<MaintenanceRequestResponse> findOverdueByCondominiumId(
@@ -140,12 +160,14 @@ public class MaintenanceRequestService {
                 .map(MaintenanceRequestMapper::toResponse);
     }
 
+
     @Transactional
     public MaintenanceRequestResponse sendToReview(
             UUID requestId,
             Long condominiumId
     ) {
-        MaintenanceRequest request = findEntityByIdAndCondominiumId(requestId, condominiumId);
+        MaintenanceRequest request =
+                findEntityByIdAndCondominiumId(requestId, condominiumId);
 
         if (!request.getStatus().equals(MaintenanceRequestStatus.OPEN)) {
             throw new InvalidMaintenanceRequestStatusException();
@@ -156,13 +178,15 @@ public class MaintenanceRequestService {
         return MaintenanceRequestMapper.toResponse(request);
     }
 
+
     @Transactional
     public MaintenanceRequestResponse changePriority(
             UUID requestId,
             Long condominiumId,
             Priority newPriority
     ) {
-        MaintenanceRequest request = findEntityByIdAndCondominiumId(requestId, condominiumId);
+        MaintenanceRequest request =
+                findEntityByIdAndCondominiumId(requestId, condominiumId);
 
         if (request.getStatus().equals(MaintenanceRequestStatus.COMPLETED)
                 || request.getStatus().equals(MaintenanceRequestStatus.CANCELED)
@@ -175,13 +199,16 @@ public class MaintenanceRequestService {
         return MaintenanceRequestMapper.toResponse(request);
     }
 
+
     @Transactional
     public MaintenanceRequestResponse reject(
             UUID requestId,
             Long condominiumId,
             String rejectionReason
     ) {
-        MaintenanceRequest request = findEntityByIdAndCondominiumId(requestId, condominiumId);
+        MaintenanceRequest request =
+                findEntityByIdAndCondominiumId(requestId, condominiumId);
+
         if (!request.getStatus().equals(MaintenanceRequestStatus.UNDER_REVIEW)) {
             throw new InvalidMaintenanceRequestStatusException();
         }
@@ -195,16 +222,17 @@ public class MaintenanceRequestService {
         return MaintenanceRequestMapper.toResponse(request);
     }
 
+
     @Transactional
     public MaintenanceRequestResponse cancel(
             UUID requestId,
             Long condominiumId
     ) {
-        MaintenanceRequest request = findEntityByIdAndCondominiumId(requestId, condominiumId);
+        MaintenanceRequest request =
+                findEntityByIdAndCondominiumId(requestId, condominiumId);
 
         if (!request.getStatus().equals(MaintenanceRequestStatus.OPEN)
-                && !request.getStatus().equals(MaintenanceRequestStatus.UNDER_REVIEW)
-        ) {
+                && !request.getStatus().equals(MaintenanceRequestStatus.UNDER_REVIEW)) {
             throw new InvalidMaintenanceRequestStatusException();
         }
 
@@ -225,7 +253,8 @@ public class MaintenanceRequestService {
 
         Category category = categoryRepository.findById(requestDto.categoryId())
                 .orElseThrow(
-                        () -> new CategoryNotFoundException(requestDto.categoryId()));
+                        () -> new CategoryNotFoundException(requestDto.categoryId())
+                );
 
         User user = userRepository.findById(requestDto.requesterId())
                 .orElseThrow(
@@ -237,17 +266,17 @@ public class MaintenanceRequestService {
                         () -> new CondominiumNotFoundException(condominiumId)
                 );
 
-        if (!asset.isActive() || !user.isActive() || !category.isActive() || !condominium.isActive()) {
+        if (!asset.isActive()
+                || !user.isActive()
+                || !category.isActive()
+                || !condominium.isActive()) {
             throw new InactiveMaintenanceRequestResourceException();
         }
 
-
-        if (
-                user.getCondominium() == null
-                        || !asset.getCondominium().getId().equals(condominiumId)
-                        || !category.getCondominium().getId().equals(condominiumId)
-                        || !user.getCondominium().getId().equals(condominiumId)
-        ) {
+        if (user.getCondominium() == null
+                || !asset.getCondominium().getId().equals(condominiumId)
+                || !category.getCondominium().getId().equals(condominiumId)
+                || !user.getCondominium().getId().equals(condominiumId)) {
             throw new CrossCondominiumResourceException();
         }
 
@@ -259,6 +288,7 @@ public class MaintenanceRequestService {
                 condominium
         );
     }
+
 
     private MaintenanceRequest findEntityByIdAndCondominiumId(
             UUID requestId,

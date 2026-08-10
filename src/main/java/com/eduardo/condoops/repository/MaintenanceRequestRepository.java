@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceRequest, UUID> {
+
     Page<MaintenanceRequest> findByCondominiumId(
             Long condominiumId,
             Pageable pageable
@@ -43,7 +44,7 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
 
     Page<MaintenanceRequest> findByCondominiumIdAndOpenedAtBetween(
             Long condominiumId,
-            Instant openedAt,
+            Instant start,
             Instant end,
             Pageable pageable
     );
