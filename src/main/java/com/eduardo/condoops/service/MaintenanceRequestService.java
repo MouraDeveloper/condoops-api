@@ -7,6 +7,8 @@ import com.eduardo.condoops.entity.enums.MaintenanceRequestStatus;
 import com.eduardo.condoops.entity.enums.Priority;
 import com.eduardo.condoops.exception.conflict.CrossCondominiumResourceException;
 import com.eduardo.condoops.exception.conflict.InactiveMaintenanceRequestResourceException;
+import com.eduardo.condoops.exception.conflict.InvalidMaintenanceRequestStatusException;
+import com.eduardo.condoops.exception.conflict.MissingRejectionReasonException;
 import com.eduardo.condoops.exception.notfound.*;
 import com.eduardo.condoops.mapper.MaintenanceRequestMapper;
 import com.eduardo.condoops.repository.*;
@@ -84,17 +86,6 @@ public class MaintenanceRequestService {
     }
 
 
-    private MaintenanceRequest findEntityByIdAndCondominiumId(UUID requestId, Long condominiumId) {
-        MaintenanceRequest request = maintenanceRequestRepository.findById(requestId)
-                .orElseThrow(() -> new MaintenanceRequestNotFound(requestId));
-
-        if (!request.getCondominium().getId().equals(condominiumId)) {
-            throw new MaintenanceRequestNotFound(requestId);
-        }
-
-        return request;
-    }
-
     @Transactional(readOnly = true)
     public Page<MaintenanceRequestResponse> findByCondominiumIdAndAssetId(
             Long condominiumId,
@@ -149,6 +140,76 @@ public class MaintenanceRequestService {
                 .map(MaintenanceRequestMapper::toResponse);
     }
 
+    @Transactional
+    public MaintenanceRequestResponse sendToReview(UUID requestId, Long condominiumId) {
+        MaintenanceRequest request = findEntityByIdAndCondominiumId(requestId, condominiumId);
+
+        if (!request.getStatus().equals(MaintenanceRequestStatus.OPEN)) {
+            throw new InvalidMaintenanceRequestStatusException();
+        }
+
+        request.sendToReview();
+
+        return MaintenanceRequestMapper.toResponse(request);
+    }
+
+    @Transactional
+    public MaintenanceRequestResponse changePriority(
+            UUID requestId,
+            Long condominiumId,
+            Priority newPriority
+    ) {
+        MaintenanceRequest request = findEntityByIdAndCondominiumId(requestId, condominiumId);
+
+        if (request.getStatus().equals(MaintenanceRequestStatus.COMPLETED)
+                || request.getStatus().equals(MaintenanceRequestStatus.CANCELED)
+                || request.getStatus().equals(MaintenanceRequestStatus.REJECTED)) {
+            throw new InvalidMaintenanceRequestStatusException();
+        }
+
+        request.changePriority(newPriority);
+
+        return MaintenanceRequestMapper.toResponse(request);
+    }
+
+    @Transactional
+    public MaintenanceRequestResponse reject(
+            UUID requestId,
+            Long condominiumId,
+            String rejectionReason
+    ) {
+        MaintenanceRequest request = findEntityByIdAndCondominiumId(requestId, condominiumId);
+        if (!request.getStatus().equals(MaintenanceRequestStatus.UNDER_REVIEW)) {
+            throw new InvalidMaintenanceRequestStatusException();
+        }
+
+        if (rejectionReason == null || rejectionReason.isBlank()) {
+            throw new MissingRejectionReasonException();
+        }
+
+        request.reject(rejectionReason);
+
+        return MaintenanceRequestMapper.toResponse(request);
+    }
+
+    @Transactional
+    public MaintenanceRequestResponse cancel(
+            UUID requestId,
+            Long condominiumId
+    ) {
+        MaintenanceRequest request = findEntityByIdAndCondominiumId(requestId, condominiumId);
+
+        if (!request.getStatus().equals(MaintenanceRequestStatus.OPEN)
+                && !request.getStatus().equals(MaintenanceRequestStatus.UNDER_REVIEW)
+        ) {
+            throw new InvalidMaintenanceRequestStatusException();
+        }
+
+        request.cancel();
+
+        return MaintenanceRequestMapper.toResponse(request);
+    }
+
 
     private MaintenanceRequest buildMaintenanceRequest(
             CreateMaintenanceRequestDto requestDto,
@@ -194,5 +255,16 @@ public class MaintenanceRequestService {
                 user,
                 condominium
         );
+    }
+
+    private MaintenanceRequest findEntityByIdAndCondominiumId(UUID requestId, Long condominiumId) {
+        MaintenanceRequest request = maintenanceRequestRepository.findById(requestId)
+                .orElseThrow(() -> new MaintenanceRequestNotFound(requestId));
+
+        if (!request.getCondominium().getId().equals(condominiumId)) {
+            throw new MaintenanceRequestNotFound(requestId);
+        }
+
+        return request;
     }
 }
