@@ -2,7 +2,9 @@ package com.eduardo.condoops.service;
 
 import com.eduardo.condoops.dto.maintenanceRequest.CreateMaintenanceRequestDto;
 import com.eduardo.condoops.dto.maintenanceRequest.MaintenanceRequestResponse;
+import com.eduardo.condoops.dto.maintenanceRequestHistory.MaintenanceRequestHistoryResponse;
 import com.eduardo.condoops.entity.*;
+import com.eduardo.condoops.entity.MaintenanceRequestHistory;
 import com.eduardo.condoops.entity.enums.MaintenanceRequestStatus;
 import com.eduardo.condoops.entity.enums.Priority;
 import com.eduardo.condoops.exception.conflict.CrossCondominiumResourceException;
@@ -10,6 +12,7 @@ import com.eduardo.condoops.exception.conflict.InactiveMaintenanceRequestResourc
 import com.eduardo.condoops.exception.conflict.InvalidMaintenanceRequestStatusException;
 import com.eduardo.condoops.exception.conflict.MissingRejectionReasonException;
 import com.eduardo.condoops.exception.notfound.*;
+import com.eduardo.condoops.mapper.MaintenanceRequestHistoryMapper;
 import com.eduardo.condoops.mapper.MaintenanceRequestMapper;
 import com.eduardo.condoops.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +34,7 @@ public class MaintenanceRequestService {
     private final CondominiumRepository condominiumRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final MaintenanceRequestHistoryRepository maintenanceRequestHistoryRepository;
 
 
     @Transactional
@@ -164,7 +168,8 @@ public class MaintenanceRequestService {
     @Transactional
     public MaintenanceRequestResponse sendToReview(
             UUID requestId,
-            Long condominiumId
+            Long condominiumId,
+            UUID responsibleUserId
     ) {
         MaintenanceRequest request =
                 findEntityByIdAndCondominiumId(requestId, condominiumId);
@@ -173,7 +178,21 @@ public class MaintenanceRequestService {
             throw new InvalidMaintenanceRequestStatusException();
         }
 
+        MaintenanceRequestStatus statusAntigo = request.getStatus();
+
+        User user = findUserByIdAndCondominiumId(responsibleUserId, condominiumId);
+
         request.sendToReview();
+
+        MaintenanceRequestHistory history = new MaintenanceRequestHistory(
+                request,
+                statusAntigo,
+                request.getStatus(),
+                "Maintenance request sent for review.",
+                user
+        );
+
+        maintenanceRequestHistoryRepository.save(history);
 
         return MaintenanceRequestMapper.toResponse(request);
     }
@@ -204,7 +223,8 @@ public class MaintenanceRequestService {
     public MaintenanceRequestResponse reject(
             UUID requestId,
             Long condominiumId,
-            String rejectionReason
+            String rejectionReason,
+            UUID responsibleUserId
     ) {
         MaintenanceRequest request =
                 findEntityByIdAndCondominiumId(requestId, condominiumId);
@@ -217,7 +237,21 @@ public class MaintenanceRequestService {
             throw new MissingRejectionReasonException();
         }
 
+        MaintenanceRequestStatus status = request.getStatus();
+
+        User user = findUserByIdAndCondominiumId(responsibleUserId, condominiumId);
+
         request.reject(rejectionReason);
+
+        MaintenanceRequestHistory requestHistory = new MaintenanceRequestHistory(
+                request,
+                status,
+                request.getStatus(),
+                rejectionReason,
+                user
+        );
+
+        maintenanceRequestHistoryRepository.save(requestHistory);
 
         return MaintenanceRequestMapper.toResponse(request);
     }
@@ -226,7 +260,8 @@ public class MaintenanceRequestService {
     @Transactional
     public MaintenanceRequestResponse cancel(
             UUID requestId,
-            Long condominiumId
+            Long condominiumId,
+            UUID responsibleUserId
     ) {
         MaintenanceRequest request =
                 findEntityByIdAndCondominiumId(requestId, condominiumId);
@@ -236,9 +271,40 @@ public class MaintenanceRequestService {
             throw new InvalidMaintenanceRequestStatusException();
         }
 
+        MaintenanceRequestStatus status = request.getStatus();
+
+        User user = findUserByIdAndCondominiumId(responsibleUserId, condominiumId);
+
         request.cancel();
 
+        MaintenanceRequestHistory requestHistory = new MaintenanceRequestHistory(
+                request,
+                status,
+                request.getStatus(),
+                "Maintenance request canceled.",
+                user
+        );
+
+        maintenanceRequestHistoryRepository.save(requestHistory);
+
         return MaintenanceRequestMapper.toResponse(request);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<MaintenanceRequestHistoryResponse> findHistoryByRequestIdAndCondominiumId(
+            UUID requestId,
+            Long condominiumId,
+            Pageable pageable
+    ) {
+
+        MaintenanceRequest request = findEntityByIdAndCondominiumId(requestId, condominiumId);
+
+        Page<MaintenanceRequestHistory> requestHistory = maintenanceRequestHistoryRepository
+                .findByMaintenanceRequest_IdOrderByChangedAtAsc(request.getId(), pageable);
+
+        return requestHistory.map(
+                MaintenanceRequestHistoryMapper::toResponse
+        );
     }
 
 
@@ -289,7 +355,6 @@ public class MaintenanceRequestService {
         );
     }
 
-
     private MaintenanceRequest findEntityByIdAndCondominiumId(
             UUID requestId,
             Long condominiumId
@@ -302,5 +367,28 @@ public class MaintenanceRequestService {
         }
 
         return request;
+    }
+
+    private User findUserByIdAndCondominiumId(
+            UUID userId,
+            Long condominiumId
+    ) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+
+        if (user.getCondominium() == null
+                || !user.getCondominium().getId().equals(condominiumId)) {
+            throw new CrossCondominiumResourceException();
+        }
+
+        if (!user.getCondominium().isActive()) {
+            throw new InactiveMaintenanceRequestResourceException();
+        }
+
+        if (!user.isActive()) {
+            throw new InactiveMaintenanceRequestResourceException();
+        }
+
+        return user;
     }
 }

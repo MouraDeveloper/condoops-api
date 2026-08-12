@@ -2,6 +2,7 @@ package com.eduardo.condoops.controller;
 
 import com.eduardo.condoops.dto.maintenanceRequest.CreateMaintenanceRequestDto;
 import com.eduardo.condoops.dto.maintenanceRequest.MaintenanceRequestResponse;
+import com.eduardo.condoops.dto.maintenanceRequestHistory.MaintenanceRequestHistoryResponse;
 import com.eduardo.condoops.entity.enums.MaintenanceRequestStatus;
 import com.eduardo.condoops.entity.enums.Priority;
 import com.eduardo.condoops.service.MaintenanceRequestService;
@@ -40,12 +41,14 @@ public class MaintenanceRequestController {
     @PutMapping("/{requestId}/condominium/{condominiumId}/send-to-review")
     public ResponseEntity<MaintenanceRequestResponse> sendToReview(
             @PathVariable UUID requestId,
-            @PathVariable Long condominiumId
+            @PathVariable Long condominiumId,
+            @RequestParam UUID responsibleUserId
     ) {
         return ResponseEntity.ok(
                 maintenanceRequestService.sendToReview(
                         requestId,
-                        condominiumId
+                        condominiumId,
+                        responsibleUserId
                 )
         );
     }
@@ -71,13 +74,15 @@ public class MaintenanceRequestController {
     public ResponseEntity<MaintenanceRequestResponse> reject(
             @PathVariable UUID requestId,
             @PathVariable Long condominiumId,
-            @RequestParam String rejectionReason
+            @RequestParam String rejectionReason,
+            @RequestParam UUID responsibleUserId
     ) {
         return ResponseEntity.ok(
                 maintenanceRequestService.reject(
                         requestId,
                         condominiumId,
-                        rejectionReason
+                        rejectionReason,
+                        responsibleUserId
                 )
         );
     }
@@ -86,12 +91,14 @@ public class MaintenanceRequestController {
     @PutMapping("/{requestId}/condominium/{condominiumId}/cancel")
     public ResponseEntity<MaintenanceRequestResponse> cancel(
             @PathVariable UUID requestId,
-            @PathVariable Long condominiumId
+            @PathVariable Long condominiumId,
+            @RequestParam UUID responsibleUserId
     ) {
         return ResponseEntity.ok(
                 maintenanceRequestService.cancel(
                         requestId,
-                        condominiumId
+                        condominiumId,
+                        responsibleUserId
                 )
         );
     }
@@ -214,6 +221,21 @@ public class MaintenanceRequestController {
     ) {
         return ResponseEntity.ok(
                 maintenanceRequestService.findOverdueByCondominiumId(
+                        condominiumId,
+                        pageable
+                )
+        );
+    }
+
+    @GetMapping("/{requestId}/condominium/{condominiumId}/history")
+    public ResponseEntity<Page<MaintenanceRequestHistoryResponse>> findHistoryByRequestIdAndCondominiumId(
+            @PathVariable UUID requestId,
+            @PathVariable Long condominiumId,
+            Pageable pageable
+    ) {
+        return ResponseEntity.ok(
+                maintenanceRequestService.findHistoryByRequestIdAndCondominiumId(
+                        requestId,
                         condominiumId,
                         pageable
                 )
