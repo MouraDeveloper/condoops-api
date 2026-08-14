@@ -7,10 +7,7 @@ import com.eduardo.condoops.entity.*;
 import com.eduardo.condoops.entity.MaintenanceRequestHistory;
 import com.eduardo.condoops.entity.enums.MaintenanceRequestStatus;
 import com.eduardo.condoops.entity.enums.Priority;
-import com.eduardo.condoops.exception.conflict.CrossCondominiumResourceException;
-import com.eduardo.condoops.exception.conflict.InactiveMaintenanceRequestResourceException;
-import com.eduardo.condoops.exception.conflict.InvalidMaintenanceRequestStatusException;
-import com.eduardo.condoops.exception.conflict.MissingRejectionReasonException;
+import com.eduardo.condoops.exception.conflict.*;
 import com.eduardo.condoops.exception.notfound.*;
 import com.eduardo.condoops.mapper.MaintenanceRequestHistoryMapper;
 import com.eduardo.condoops.mapper.MaintenanceRequestMapper;
@@ -35,6 +32,7 @@ public class MaintenanceRequestService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final MaintenanceRequestHistoryRepository maintenanceRequestHistoryRepository;
+    private final WorkOrderRepository workOrderRepository;
 
 
     @Transactional
@@ -285,7 +283,56 @@ public class MaintenanceRequestService {
                 user
         );
 
+
         maintenanceRequestHistoryRepository.save(requestHistory);
+
+        return MaintenanceRequestMapper.toResponse(request);
+    }
+
+    @Transactional
+    public MaintenanceRequestResponse approve(
+            UUID requestId,
+            Long condominiumId,
+            UUID responsibleUserId
+    ) {
+        MaintenanceRequest request =
+                findEntityByIdAndCondominiumId(requestId, condominiumId);
+
+        if (request.getStatus() != MaintenanceRequestStatus.UNDER_REVIEW) {
+            throw new InvalidMaintenanceRequestStatusException();
+        }
+
+        User user =
+                findUserByIdAndCondominiumId(responsibleUserId, condominiumId);
+
+        if (workOrderRepository.existsByMaintenanceRequest_Id(requestId)) {
+            throw new WorkOrderAlreadyExistsException();
+        }
+
+        MaintenanceRequestStatus previousStatus = request.getStatus();
+
+        request.approve();
+
+        String orderNumber =
+                "WO-" + UUID.randomUUID().toString().toUpperCase();
+
+        WorkOrder workOrder = new WorkOrder(
+                orderNumber,
+                request,
+                request.getCondominium()
+        );
+
+        workOrderRepository.save(workOrder);
+
+        MaintenanceRequestHistory history = new MaintenanceRequestHistory(
+                request,
+                previousStatus,
+                request.getStatus(),
+                "Maintenance request approved.",
+                user
+        );
+
+        maintenanceRequestHistoryRepository.save(history);
 
         return MaintenanceRequestMapper.toResponse(request);
     }

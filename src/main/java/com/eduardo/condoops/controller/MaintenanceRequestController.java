@@ -103,6 +103,21 @@ public class MaintenanceRequestController {
         );
     }
 
+    @PutMapping("/{requestId}/condominium/{condominiumId}/approve")
+    public ResponseEntity<MaintenanceRequestResponse> approve(
+            @PathVariable UUID requestId,
+            @PathVariable Long condominiumId,
+            @RequestParam UUID responsibleUserId
+    ) {
+        return ResponseEntity.ok(
+                maintenanceRequestService.approve(
+                        requestId,
+                        condominiumId,
+                        responsibleUserId
+                )
+        );
+    }
+
 
     @GetMapping("/request/{requestId}/condominium/{condominiumId}")
     public ResponseEntity<MaintenanceRequestResponse> findByIdAndCondominiumId(
